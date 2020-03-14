@@ -6,6 +6,7 @@ url_r = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_c
 conf_all = pd.read_csv(url_conf)
 d_all = pd.read_csv(url_d)
 r_all = pd.read_csv(url_r)
+path = '/Users/dmitry/python_projects/tableau/data/'
 
 
 # columns_preparation
@@ -47,13 +48,13 @@ if __name__ == '__main__':
             if country == 'Italy':
                 out.iloc[50, 1:] = [15133, 1016, 1045]
 
-            out.to_csv("/Users/dmitry/python_projects/tableau/data/_covid_{0:s}.csv".format(country), index=False)
-            print('Your files saved as _covid_{0:s}.csv'.format(country))
+            out.to_csv(path + "/covid_{0:s}.csv".format(country), index=False)
+            print('Your files saved as ' + path + 'covid_{0:s}.csv'.format(country))
         except IndexError:
             print('No such country!')
 
 
-    elif inp == "compare":
+    elif inp == "compare" or 'two':
         print('Enter first country:')
         country_1 = input()
         country_1 = country_1.lower().title()
@@ -76,14 +77,14 @@ if __name__ == '__main__':
             out_1 = pd.DataFrame(data_1)
             out_2 = pd.DataFrame(data_2)
 
+
             out_1 = out_1.set_index(['Country', 'Period'])
             out_2 = out_2.set_index(['Country', 'Period'])
 
             out_f = out_1.append(out_2)
 
-            out_f.to_csv(
-                "/Users/dmitry/python_projects/tableau/data/_covid_{0:s}+{1:s}.csv".format(country_1, country_2))
-            print('Your files saved as _covid_{0:s}+{1:s}.csv"'.format(country_1, country_2))
+            out_f.to_csv(path + "/covid_{0:s}+{1:s}.csv".format(country_1, country_2))
+            print('Your files saved as ' + path + 'covid_{0:s}+{1:s}.csv'.format(country_1, country_2))
         except IndexError:
             print("You've made an error in one of the countries")
 
