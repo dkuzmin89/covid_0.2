@@ -1,5 +1,7 @@
 import pandas as pd
 
+pd.set_option('mode.chained_assignment', None)
+
 url_conf = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
 url_d = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv'
 url_r = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv'
@@ -27,9 +29,53 @@ def val_prep(source, country):
     return vals
 
 
+# for us only
+
+def for_us(source):
+    inp_us = source.loc[source['Country/Region'] == 'US']
+    inp_us.drop(['Province/State', 'Lat', 'Long'], axis=1, inplace=True)
+    inp_us.drop(['Country/Region'], axis=1, inplace=True)
+    us_agg = inp_us.aggregate(['sum'])
+    return us_agg
+
+
+def cols_prep_us(sourse):
+    data_col = sourse.columns
+    data_col = list(data_col)
+    return data_col
+
+
+def val_prep_us(source):
+    vals = source.values.tolist()
+    vals = vals[0]
+    return vals
+
+
+# for world only
+
+def for_world(source):
+    inp = source.copy()
+    inp.drop(['Province/State', 'Lat', 'Long'], axis=1, inplace=True)
+    inp.drop(['Country/Region'], axis=1, inplace=True)
+    world_agg = inp.aggregate(['sum'])
+    return world_agg
+
+
+def cols_prep_world(sourse):
+    data_col = sourse.columns
+    data_col = list(data_col)
+    return data_col
+
+
+def val_prep_world(source):
+    vals = source.values.tolist()
+    vals = vals[0]
+    return vals
+
+
 if __name__ == '__main__':
 
-    print('Do you want to observe ONE country or COMPARE two?')
+    print('Do you want to observe ONE country, COMPARE two countries or observe whole WORLD?')
     inp = input()
     inp = inp.lower()
 
@@ -38,27 +84,46 @@ if __name__ == '__main__':
         country = input()
         try:
             country = country.lower().title()
-            data = {'Period': cols_prep(conf_all),
-                    'New_cases': val_prep(conf_all, country),
-                    'Deaths': val_prep(d_all, country),
-                    'Recovered': val_prep(r_all, country)}
-            out = pd.DataFrame(data)
 
-            # !!! ONY for ITALY correction for 12/03/20
-            if country == 'Italy':
-                out.iloc[50, 1:] = [15133, 1016, 1045]
+            # ONY FOR USA
+            if country == 'Us' or country == 'Usa':
+                data = {'Period': cols_prep_us(for_us(conf_all)),
+                        'Cases': val_prep_us(for_us(conf_all)),
+                        'Deathes': val_prep_us(for_us(d_all)),
+                        'Recovered': val_prep_us(for_us(r_all))}
+                out = pd.DataFrame(data)
+                out.to_csv(path + "/covid_USA.csv", index=False)
+                print('Your files saved as ' + path + 'covid_USA.csv')
+            else:
+                data = {'Period': cols_prep(conf_all),
+                        'New_cases': val_prep(conf_all, country),
+                        'Deaths': val_prep(d_all, country),
+                        'Recovered': val_prep(r_all, country)}
+                out = pd.DataFrame(data)
 
-            out.to_csv(path + "/covid_{0:s}.csv".format(country), index=False)
-            print('Your files saved as ' + path + 'covid_{0:s}.csv'.format(country))
+                # !!! ONY for ITALY correction for 12/03/20
+                if country == 'Italy':
+                    out.iloc[50, 1:] = [15133, 1016, 1045]
+
+                out.to_csv(path + "/covid_{0:s}.csv".format(country), index=False)
+                print('Your files saved as ' + path + 'covid_{0:s}.csv'.format(country))
         except IndexError:
             print('No such country!')
 
+    elif inp == 'world':
+        data = {'Period': cols_prep_world(for_world(conf_all)),
+                'Cases': val_prep_world(for_world(conf_all)),
+                'Deathes': val_prep_world(for_world(d_all)),
+                'Recovered': val_prep_world(for_world(r_all))}
+        out = pd.DataFrame(data)
+        out.to_csv(path + "/covid_WORLD.csv", index=False)
+        print('Your files saved as ' + path + 'covid_WORLD.csv')
 
-    elif inp == "compare" or 'two':
-        print('Enter first country:')
+    elif inp == "compare" or inp == 'two':
+        print('Enter first country (but not US):')
         country_1 = input()
         country_1 = country_1.lower().title()
-        print('Enter second country:')
+        print('Enter second country (but not US):')
         country_2 = input()
         country_2 = country_2.lower().title()
 
@@ -77,7 +142,6 @@ if __name__ == '__main__':
             out_1 = pd.DataFrame(data_1)
             out_2 = pd.DataFrame(data_2)
 
-
             out_1 = out_1.set_index(['Country', 'Period'])
             out_2 = out_2.set_index(['Country', 'Period'])
 
@@ -89,4 +153,4 @@ if __name__ == '__main__':
             print("You've made an error in one of the countries")
 
     else:
-        print('Next time enter only "one" or "compare"')
+        print('Next time enter only "one", "compare", or "world"')
