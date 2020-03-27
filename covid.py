@@ -45,7 +45,6 @@ def for_fr(source):
     return fr_agg
 
 
-# for world only
 def for_world(source):
     inp = source.copy()
     inp.drop(['Province/State', 'Lat', 'Long'], axis=1, inplace=True)
